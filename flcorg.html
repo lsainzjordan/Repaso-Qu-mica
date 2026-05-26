@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Química II: Flashcards Completas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos para el efecto 3D de la tarjeta */
+        .perspective { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-transition { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+        .shadow-soft { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
+
+    <div class="max-w-2xl w-full mx-auto px-4 py-8 flex-grow flex flex-col fade-in">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-600 mb-2">Química II: Reacciones Completas</h1>
+            <p class="text-slate-500 text-sm">Toca la tarjeta para darla la vuelta y ver el producto</p>
+        </header>
+
+        <div class="flex justify-between items-center mb-4 px-2">
+            <span id="counter" class="text-sm font-semibold text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
+                Carta 1
+            </span>
+            <button onclick="shuffleCards()" class="text-sm flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>
+                Mezclar
+            </button>
+        </div>
+
+        <div class="perspective w-full aspect-[4/3] sm:aspect-[3/2] cursor-pointer mb-8" onclick="flipCard()">
+            <div id="flashcard" class="relative w-full h-full transform-style-3d card-transition rounded-2xl shadow-soft">
+                
+                <div class="absolute w-full h-full backface-hidden bg-white rounded-2xl border-2 border-indigo-100 flex flex-col justify-center items-center p-6 text-center">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-4 bg-indigo-50 px-3 py-1 rounded-full">Reactivos / Concepto</span>
+                    <div id="front-content" class="text-xl sm:text-2xl text-slate-700 font-medium leading-relaxed">
+                        </div>
+                </div>
+
+                <div class="absolute w-full h-full backface-hidden bg-indigo-600 rounded-2xl border-2 border-indigo-700 flex flex-col justify-center items-center p-6 text-center rotate-y-180">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-200 mb-4 bg-indigo-800 bg-opacity-50 px-3 py-1 rounded-full">Respuesta</span>
+                    <div id="back-content" class="text-xl sm:text-2xl text-white font-medium leading-relaxed">
+                        </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center gap-4 mt-auto">
+            <button onclick="prevCard()" class="flex-1 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 py-3 px-4 rounded-xl font-medium transition-colors shadow-sm flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Anterior
+            </button>
+            <button onclick="nextCard()" class="flex-1 bg-indigo-600 text-white hover:bg-indigo-700 py-3 px-4 rounded-xl font-medium transition-colors shadow-sm flex justify-center items-center gap-2">
+                Siguiente
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // BASE DE DATOS DE FLASHCARDS (44 Tarjetas)
+        const originalCards = [
+            // Orientaciones
+            { f: "Orientación Aromática:<br><b class='text-emerald-500'>Activadores Fuertes/Débiles</b>", b: "<b>Orto y Para dirigentes</b><br><span class='text-sm font-normal opacity-80'>Ej: -R, -OH, -OR, -NH<sub>2</sub></span>" },
+            { f: "Orientación Aromática:<br><b class='text-emerald-500'>Desactivadores Débiles</b>", b: "<b>Orto y Para dirigentes</b><br><span class='text-sm font-normal opacity-80'>Ej: Halógenos (-F, -Cl, -Br, -I)</span>" },
+            { f: "Orientación Aromática:<br><b class='text-red-500'>Desactivadores Fuertes</b>", b: "<b>Meta dirigentes</b><br><span class='text-sm font-normal opacity-80'>Ej: -NO<sub>2</sub>, -SO<sub>3</sub>H, -COOH, -CHO, -COR, -CN</span>" },
+            
+            // Halogenaciones y Adiciones
+            { f: "Alcano + X<sub>2</sub><br><span class='text-sm text-slate-400'>(con luz h&nu; o &Delta;)</span>", b: "<b>Haluro de alquilo</b><br><span class='text-sm font-normal opacity-80'>(Sustitución por radicales)</span><br><br>R-X" },
+            { f: "Alqueno + X<sub>2</sub>", b: "<b>Dihaluro vecinal saturado</b><br><br>R-CH(X)-CH(X)-R'" },
+            { f: "Alquino + HX", b: "<b>Hidrohaluro insaturado</b><br><span class='text-sm font-normal opacity-80'>(Adición de 1 equivalente)</span><br><br>R-CH=C(X)-R'" },
+            { f: "Hidrohaluro insaturado + HX", b: "<b>Dihaluro saturado</b><br><span class='text-sm font-normal opacity-80'>(Geminal o Vecinal)</span>" },
+            { f: "Alquino + 2X<sub>2</sub>", b: "<b>Tetrahaluro saturado</b><br><br>R-CX<sub>2</sub>-CX<sub>2</sub>-R'" },
+            { f: "Alqueno + HX", b: "<b>Haluro de alquilo saturado</b><br><span class='text-sm font-normal opacity-80'>(Regla de Markovnikov)</span><br><br>R-CH<sub>2</sub>-CH(X)-R'" },
+            { f: "Alqueno + HBr + ROOR'<br><span class='text-sm text-slate-400'>(Peróxidos)</span>", b: "<b>Haluro de alquilo saturado</b><br><span class='text-sm font-normal opacity-80'>(Anti-Markovnikov)</span><br><br>R-CH(X)-CH<sub>2</sub>-R'" },
+            
+            // Hidrataciones y Deshidrataciones
+            { f: "Alqueno + H<sub>2</sub>O / H<sub>2</sub>SO<sub>4</sub>", b: "<b>Alcohol</b><br><span class='text-sm font-normal opacity-80'>(Regla de Markovnikov)</span><br><br>R-CH<sub>2</sub>-CH(OH)-R'" },
+            { f: "Alcohol + H<sub>2</sub>SO<sub>4</sub> / &Delta;", b: "<b>Alqueno + H<sub>2</sub>O</b><br><span class='text-sm font-normal opacity-80'>(Deshidratación)</span><br><br>R-CH=CH-R'" },
+            
+            // Hidrogenaciones
+            { f: "Alqueno + H<sub>2</sub> / Pt, Pd o Ni", b: "<b>Alcano</b><br><span class='text-sm font-normal opacity-80'>(Hidrogenación)</span><br><br>R-CH<sub>2</sub>-CH<sub>2</sub>-R'" },
+            { f: "Alquino + 2H<sub>2</sub> / Pt, Pd o Ni", b: "<b>Alcano</b><br><span class='text-sm font-normal opacity-80'>(Hidrogenación completa)</span><br><br>R-CH<sub>2</sub>-CH<sub>2</sub>-R'" },
+            
+            // Oxidaciones
+            { f: "Alqueno + Perácido (R-COOOH)", b: "<b>Epóxido</b><br><span class='text-sm font-normal opacity-80'>(Éter cíclico)</span><br><br>R-CH(O)CH-R'" },
+            { f: "Alquilbenceno (Ar-R)<br>+ KMnO<sub>4</sub> / &Delta;", b: "<b>Ácido benzoico</b><br><span class='text-sm font-normal opacity-80'>(Ruptura de cadena lateral)</span><br><br>Ar-COOH" },
+            { f: "Alquino interno (R-C&equiv;C-R')<br>+ KMnO<sub>4</sub> / &Delta;", b: "<b>Dos Ácidos Carboxílicos</b><br><span class='text-sm font-normal opacity-80'>(Ruptura de cadena)</span><br><br>R-COOH + R'-COOH" },
+            { f: "Alcohol primario (R-CH<sub>2</sub>OH)<br>+ CrO<sub>3</sub> (en piridina)", b: "<b>Aldehído</b><br><span class='text-sm font-normal opacity-80'>(Oxidación suave)</span><br><br>R-CHO" },
+            { f: "Alcohol primario (R-CH<sub>2</sub>OH)<br>+ KMnO<sub>4</sub>", b: "<b>Ácido carboxílico</b><br><span class='text-sm font-normal opacity-80'>(Oxidación fuerte)</span><br><br>R-COOH" },
+            { f: "Alcohol secundario<br>+ KMnO<sub>4</sub>", b: "<b>Cetona</b><br><br>R-CO-R'" },
+            { f: "Aldehído (R-CHO)<br>+ KMnO<sub>4</sub>", b: "<b>Ácido carboxílico</b><br><br>R-COOH" },
+            { f: "Cetona o Ácido Carboxílico<br>+ KMnO<sub>4</sub>", b: "<b>NO REACCIONA</b><br><span class='text-sm font-normal opacity-80'>(Estado máximo de oxidación)</span>" },
+            
+            // Reducciones
+            { f: "Cetona o Aldehído<br>+ NaBH<sub>4</sub> o LiAlH<sub>4</sub>", b: "<b>Alcohol (Secundario o Primario)</b><br><span class='text-sm font-normal opacity-80'>(Reducción)</span>" },
+            { f: "Ácido carboxílico (R-COOH)<br>+ LiAlH<sub>4</sub>", b: "<b>Alcohol primario</b><br><span class='text-sm font-normal opacity-80'>(Reducción fuerte)</span><br><br>R-CH<sub>2</sub>OH" },
+            
+            // Sustituciones Nucleofílicas y Éteres
+            { f: "Haluro de alquilo (R-X)<br>+ NaOH / H<sub>2</sub>O", b: "<b>Alcohol</b><br><span class='text-sm font-normal opacity-80'>(Sustitución Nucleofílica)</span><br><br>R-OH" },
+            { f: "Alcohol (R-OH) + Na<br>+ Haluro (R'-X)", b: "<b>Éter</b><br><span class='text-sm font-normal opacity-80'>(Síntesis de Williamson)</span><br><br>R-O-R'" },
+            { f: "Fenol (Ar-OH) + NaOH<br>+ Haluro de alquilo (R-X)", b: "<b>Éter aromático</b><br><span class='text-sm font-normal opacity-80'>(Síntesis de Williamson)</span><br><br>Ar-O-R" },
+            { f: "Epóxido + NaOH / H<sub>2</sub>O", b: "<b>Glicol (Diol vecinal)</b><br><br>R-CH(OH)-CH(OH)-R'" },
+            { f: "Alquino terminal (R-C&equiv;C-H)<br>+ NaNH<sub>2</sub> + R'-X", b: "<b>Alquino interno</b><br><span class='text-sm font-normal opacity-80'>(Alargamiento de cadena)</span><br><br>R-C&equiv;C-R'" },
+            
+            // Reactivos Magnesianos (Grignard)
+            { f: "Haluro de alquilo (R-X)<br>+ Mg (en éter seco)", b: "<b>Reactivo de Grignard</b><br><br>R-MgX" },
+            { f: "R-MgX + Epóxido + H<sub>2</sub>O", b: "<b>Alcohol primario</b><br><span class='text-sm font-normal opacity-80'>(Cadena alargada 2 carbonos)</span>" },
+            { f: "R-MgX + Metanal (H-CHO) + H<sub>2</sub>O", b: "<b>Alcohol primario</b><br><span class='text-sm font-normal opacity-80'>(Cadena alargada 1 carbono)</span>" },
+            { f: "R-MgX + Aldehído + H<sub>2</sub>O", b: "<b>Alcohol secundario</b>" },
+            { f: "R-MgX + Cetona + H<sub>2</sub>O", b: "<b>Alcohol terciario</b>" },
+            
+            // Ácidos y Derivados
+            { f: "Ácido carboxílico (R-COOH)<br>+ NaOH", b: "<b>Sal alcoxi (Carboxilato)</b><br><br>R-COO<sup>-</sup>Na<sup>+</sup> + H<sub>2</sub>O" },
+            { f: "Ácido carboxílico (R-COOH)<br>+ Alcohol (R'-OH)", b: "<b>Éster</b><br><span class='text-sm font-normal opacity-80'>(Esterificación)</span><br><br>R-COO-R'" },
+            { f: "Ácido carboxílico (R-COOH)<br>+ Amoniaco (NH<sub>3</sub>)", b: "<b>Amida</b><br><br>R-CONH<sub>2</sub>" },
+            { f: "Ácido carboxílico (R-COOH)<br>+ SOCl<sub>2</sub>", b: "<b>Cloruro de ácido</b><br><br>R-COCl" },
+            { f: "Ácido carboxílico (R-COOH)<br>+ Ácido Carboxílico (R'-COOH)", b: "<b>Anhídrido de ácido</b><br><br>R-CO-O-CO-R'" },
+            
+            // Sustituciones Aromáticas (Benceno)
+            { f: "Benceno (Ar-H)<br>+ X<sub>2</sub> / AlCl<sub>3</sub>", b: "<b>Halobenceno</b><br><span class='text-sm font-normal opacity-80'>(Halogenación)</span><br><br>Ar-X" },
+            { f: "Benceno (Ar-H)<br>+ HNO<sub>3</sub> / H<sub>2</sub>SO<sub>4</sub>", b: "<b>Nitrobenceno</b><br><span class='text-sm font-normal opacity-80'>(Nitración)</span><br><br>Ar-NO<sub>2</sub>" },
+            { f: "Benceno (Ar-H)<br>+ SO<sub>3</sub> / H<sub>2</sub>SO<sub>4</sub>", b: "<b>Ácido bencenosulfónico</b><br><span class='text-sm font-normal opacity-80'>(Sulfonación)</span><br><br>Ar-SO<sub>3</sub>H" },
+            { f: "Benceno (Ar-H)<br>+ Haluro de alquilo (R-Cl) / AlCl<sub>3</sub>", b: "<b>Alquilbenceno</b><br><span class='text-sm font-normal opacity-80'>(Alquilación Friedel-Crafts)</span><br><br>Ar-R" },
+            { f: "Benceno (Ar-H)<br>+ Cloruro de ácido (R-COCl) / AlCl<sub>3</sub>", b: "<b>Cetona aromática</b><br><span class='text-sm font-normal opacity-80'>(Acilación Friedel-Crafts)</span><br><br>Ar-CO-R" }
+        ];
+
+        let cards = [...originalCards];
+        let currentCard = 0;
+        let isFlipped = false;
+
+        function updateCardDisplay() {
+            if (isFlipped) {
+                document.getElementById('flashcard').classList.remove('rotate-y-180');
+                isFlipped = false;
+                // Esperar a que gire para cambiar el texto
+                setTimeout(() => injectContent(), 300);
+            } else {
+                injectContent();
+            }
+        }
+
+        function injectContent() {
+            document.getElementById('front-content').innerHTML = cards[currentCard].f;
+            document.getElementById('back-content').innerHTML = cards[currentCard].b;
+            document.getElementById('counter').innerText = `Carta ${currentCard + 1} de ${cards.length}`;
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('flashcard').classList.toggle('rotate-y-180');
+        }
+
+        function nextCard() { 
+            currentCard = (currentCard + 1) % cards.length; 
+            updateCardDisplay(); 
+        }
+        
+        function prevCard() { 
+            currentCard = (currentCard - 1 + cards.length) % cards.length; 
+            updateCardDisplay(); 
+        }
+        
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentCard = 0; 
+            updateCardDisplay();
+        }
+
+        // Permitir navegación con el teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextCard();
+            else if (e.key === 'ArrowLeft') prevCard();
+            else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault(); 
+                flipCard();
+            }
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', updateCardDisplay);
+    </script>
+</body>
+</html>
